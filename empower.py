@@ -3,6 +3,7 @@ import numpy as np
 from sys import exit
 from enum import Enum
 from random import randint as rand
+import copy 
 
 #Settings
 pygame.init()
@@ -10,6 +11,9 @@ width = 600
 height = 600
 n = 6
 m = 6
+N = 10 #ilosc sekwencji
+L = 5 #dlugosc
+M = 4 #ilosc ruchow
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Empowerment")
 clock = pygame.time.Clock()
@@ -41,13 +45,8 @@ class Agent:
 
     def draw_agent(self):
         screen.blit(self.surface, (self.x*width/n,self.y*height/m))
-# duzo warunkow na to co on moze robic (wziac pod uwage ograniczenia)
-# zrobic funkcje ktora nie rusza graficznie agentem ale zwraca jego nowe polozenie
-# empowererment to suma wszystkich unikalnych koncowych polozen agenta z wylosowanej probki
-#  ta funkcja powinna przyjmowac dlugosc ciagu i ilosc losowan
-# na koncu wykonac sekwencje ruchow dazaca do maksymalnego empoweeremtu 
-    def do(self):
-        action = rand(Actions.UP.value, Actions.RIGHT.value)
+
+    def do(self, action):
         if(action == Actions.UP.value and self.y > 0 and self.y < n):
             self.y -= 1
         elif(action == Actions.DOWN.value and self.y >= 0 and self.y < n-1):
@@ -64,6 +63,36 @@ class Agent:
         #     self.x -= 2
         # elif(action == Actions.DO_RIGHT.value):
         #     self.x += 2
+
+    def quasiMove(self, initAction, sequence):
+        quasiAgent = Agent(self.getXY()[0], self.getXY()[1])
+        quasiAgent.do(initAction)
+        for action in sequence:
+            quasiAgent.do(action)
+        return quasiAgent.getXY()
+
+    def getXY(self):
+        return [self.x, self.y]
+    
+    def empsForActions(self):
+        emps = []
+        for initAction in range(M):
+            seqs =[]
+            sequence = []
+            xys = []
+            for i in range(N):
+                for j in range(L):
+                    sequence.append(np.random.randint(0,3)) #losowanie ruchow po DANYM ruchu (w prawo)
+                seqs.append(sequence)
+            for i in range(N):    
+                xys.append(self.quasiMove(initAction, seqs[i]))
+            emps.append(len(np.unique(xys)))
+        return emps
+    
+    def empowered(self):
+        emps = self.empsForActions()
+        return np.argmax(emps)
+    
 
 
 class Our_map:
@@ -98,7 +127,7 @@ while True:
             exit()
     our_map.draw_map()
     agent.draw_agent()
-    agent.do()
+    agent.do(agent.empowered())
 
 
 
