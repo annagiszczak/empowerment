@@ -46,8 +46,8 @@ class Agent:
     def draw_agent(self):
         screen.blit(self.surface, (self.x*width/n,self.y*height/m))
 
-    def do(self, action):
-        if(action == Actions.UP.value and self.y > 0 and self.y < n):
+    def do(self, action, mapa):
+        if(action == Actions.UP.value and self.y > 0 and self.y < n and mapa[self.y-1][self.x] != Tiles.WALL.value and mapa[self.y-1][self.x] != Tiles.HOLE.value):
             self.y -= 1
         elif(action == Actions.DOWN.value and self.y >= 0 and self.y < n-1):
             self.y += 1
@@ -64,17 +64,17 @@ class Agent:
         # elif(action == Actions.DO_RIGHT.value):
         #     self.x += 2
 
-    def quasiMove(self, initAction, sequence):
+    def quasiMove(self, initAction, sequence, mapa):
         quasiAgent = Agent(self.getXY()[0], self.getXY()[1])
-        quasiAgent.do(initAction)
+        quasiAgent.do(initAction,mapa)
         for action in sequence:
-            quasiAgent.do(action)
+            quasiAgent.do(action, mapa)
         return quasiAgent.getXY()
 
     def getXY(self):
         return [self.x, self.y]
     
-    def empsForActions(self):
+    def empsForActions(self, mapa):
         emps = []
         for initAction in range(M):
             seqs =[]
@@ -85,19 +85,24 @@ class Agent:
                     sequence.append(np.random.randint(0,3)) #losowanie ruchow po DANYM ruchu (w prawo)
                 seqs.append(sequence)
             for i in range(N):    
-                xys.append(self.quasiMove(initAction, seqs[i]))
+                xys.append(self.quasiMove(initAction, seqs[i], mapa))
             emps.append(len(np.unique(xys)))
         return emps
     
-    def empowered(self):
-        emps = self.empsForActions()
+    def empowered(self, mapa):
+        emps = self.empsForActions(mapa)
         return np.argmax(emps)
     
 
 
 class Our_map:
     def __init__(self):
-        self.coords = np.array([[0,0,0,-1,0,0],[0,0,0,-1,0,0],[0,0,0,-1,0,0],[0,1,0,-1,0,0],[0,0,0,-1,0,0],[0,0,0,-1,0,0]]) 
+        self.coords = np.array([[0,0,1,-1,0,1],
+                                [0,0,0,-1,0,1],
+                                [0,-1,0,-1,0,1],
+                                [0,1,0,-1,0,-1],
+                                [0,-1,-1,-1,0,0],
+                                [0,0,0,-1,0,0]]) 
         self.path_surface = pygame.Surface((width/n,height/m))
         self.wall_surface = pygame.Surface((width/n,height/m))
         self.hole_surface = pygame.Surface((width/n,height/m))
@@ -119,7 +124,7 @@ class Our_map:
 
 
 our_map = Our_map()
-agent = Agent(m-1,n-1)
+agent = Agent(2,3)
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -127,7 +132,7 @@ while True:
             exit()
     our_map.draw_map()
     agent.draw_agent()
-    agent.do(agent.empowered())
+    agent.do(agent.empowered(our_map.coords), our_map.coords)
 
 
 
