@@ -17,6 +17,8 @@ M = 4 #ilosc ruchow
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Empowerment")
 clock = pygame.time.Clock()
+background = pygame.Surface((width, height))
+background.fill((103, 169, 0))
 # test_font = pygame.font.Font('./font/Pixeltype.ttf', 50)
 
 
@@ -25,6 +27,7 @@ class Tiles(Enum):
     WALL = 1
     HOLE = -1
     BOX = 2
+    GRASS = 3
 
 
 class Actions(Enum):
@@ -37,16 +40,29 @@ class Actions(Enum):
     DO_LEFT = 6
     DO_RIGHT = 7
 
-class Agent:
+class Agent(pygame.sprite.Sprite):
     def __init__(self, x, y):
+        super().__init__()
         self.x = x
         self.y = y
-        self.surface = pygame.Surface((width/n,height/m))
-        self.surface.fill("Blue")
-        # self.coords = np.array([x,y])
+
+        #
+        player_walk_1 = pygame.image.load('graphics/player/player_walk_1.png').convert_alpha()
+        player_walk_1 = pygame.transform.scale(player_walk_1, (width/n,height/m))
+        player_walk_2 = pygame.image.load('graphics/player/player_walk_2.png').convert_alpha()
+        player_walk_2 = pygame.transform.scale(player_walk_2, (width/n,height/m))
+        self.player_walk = [player_walk_1,player_walk_2]
+        self.player_index = 0
+        self.surface = self.player_walk[self.player_index]
+        self.surface = pygame.transform.scale(self.surface, (width/n,height/m))
+        #
+
+        # self.surface = pygame.image.load('graphics/player.png').convert_alpha()
+        # self.surface = pygame.transform.scale(self.surface, (width/n,height/m)) 
 
     def draw_agent(self):
         screen.blit(self.surface, (self.x*width/n,self.y*height/m))
+        self.animation_state()
 
     def do(self, action, mapa):
         if(action == Actions.UP.value and self.y > 0 and self.y < n and mapa[self.y-1][self.x] != Tiles.WALL.value and mapa[self.y-1][self.x] != Tiles.HOLE.value):
@@ -101,26 +117,41 @@ class Agent:
         print(indices[i], "\n")
         return indices[i] #wziac losowa wartosc z najwiekszych wartosci
     
+    def animation_state(self):
+        self.player_index += 1
+        if self.player_index >= len(self.player_walk):self.player_index = 0
+        self.surface = self.player_walk[int(self.player_index)]
+        print(int(self.player_index))
 
 
 class Our_map:
     def __init__(self):
-        self.coords = np.array([[0,1,0,0,0,0,0,0,0,0],
-                                [0,1,0,0,0,0,0,0,0,0],
-                                [0,1,0,0,0,0,0,0,0,0],
-                                [0,1,0,0,0,0,0,0,0,0],
-                                [0,1,0,0,0,0,0,0,0,0],
-                                [0,1,0,0,0,0,0,0,0,0],
+        self.coords = np.array([[0,1,3,3,0,0,0,0,0,0],
+                                [0,1,3,3,0,0,0,0,0,0],
+                                [0,1,3,0,0,0,0,0,0,0],
+                                [0,1,3,0,0,0,0,0,0,0],
+                                [0,-1,3,0,0,0,0,0,0,0],
+                                [0,-1,3,0,0,0,0,0,0,0],
                                 [0,1,0,0,0,0,0,0,0,0],
                                 [0,0,0,0,0,0,0,0,0,0],
                                 [0,1,0,0,0,0,0,0,0,0],
                                 [0,1,0,0,0,0,0,0,0,0]]) 
-        self.path_surface = pygame.Surface((width/n,height/m))
-        self.wall_surface = pygame.Surface((width/n,height/m))
-        self.hole_surface = pygame.Surface((width/n,height/m))
-        self.path_surface.fill("Green")
-        self.wall_surface.fill("Red")
-        self.hole_surface.fill("Black")
+        self.path_surface = pygame.image.load('graphics/path.png').convert_alpha() #!
+        self.path_surface = pygame.transform.scale(self.path_surface, (width/n,height/m)) #!
+        self.grass_surface = pygame.image.load('graphics/grass.png').convert_alpha()  #!
+        self.grass_surface = pygame.transform.scale(self.grass_surface, (width/n,height/m)) #!
+        self.wall_surface = pygame.image.load('graphics/bigstone.png').convert_alpha()  #! convert()
+        self.wall_surface = pygame.transform.scale(self.wall_surface, (width/n,height/m)) #!
+        self.hole_surface = pygame.image.load('graphics/hole.png').convert()  #!
+        self.hole_surface = pygame.transform.scale(self.hole_surface, (width/n,height/m)) #!
+
+
+        # self.path_surface = pygame.Surface((width/n,height/m))
+        # self.wall_surface = pygame.Surface((width/n,height/m))
+        # self.hole_surface = pygame.Surface((width/n,height/m))
+        # self.path_surface.fill("Green")
+        # self.wall_surface.fill("Red")
+        # self.hole_surface.fill("Black")
 
 
     def draw_map(self):
@@ -133,7 +164,8 @@ class Our_map:
                     screen.blit(self.wall_surface, (j*width/n,i*height/m))
                 elif(self.coords[i,j] == Tiles.HOLE.value):
                     screen.blit(self.hole_surface, (j*width/n,i*height/m))
-
+                elif(self.coords[i,j] == Tiles.GRASS.value):
+                    screen.blit(self.grass_surface, (j*width/n,i*height/m))
 
 our_map = Our_map()
 agent = Agent(0,0)
@@ -142,9 +174,11 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+    screen.blit(background, (0, 0))
     our_map.draw_map()
     agent.draw_agent()
     agent.do(agent.empowered(our_map.coords), our_map.coords)
+    
 
 
     pygame.display.update() 
