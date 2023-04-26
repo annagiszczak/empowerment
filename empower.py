@@ -12,7 +12,7 @@ height = 600
 n = 10
 m = 10
 N = 100 #ilosc sekwencji
-L = 10 #dlugosc
+L = 25 #dlugosc
 M = 4 #ilosc ruchow
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Empowerment")
@@ -101,16 +101,16 @@ class Agent:
 
 class Our_map:
     def __init__(self):
-        self.coords = np.array([[0,0,1,0,0,1,0,0,0,0],
-                                [0,0,1,0,0,1,0,0,0,0],
-                                [0,0,1,0,0,1,0,0,0,0],
+        self.coords = np.array([[0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,0,0,0,0],
                                 [0,0,0,0,0,0,0,0,0,0],
-                                [1,1,0,0,0,1,0,0,0,0],
-                                [0,0,0,0,0,1,0,0,0,0],
-                                [0,0,0,0,0,1,0,0,0,0],
-                                [0,0,0,0,0,1,0,0,0,0],
-                                [0,0,0,0,0,1,0,0,0,0],
-                                [0,0,0,0,0,1,0,0,0,0]]) 
+                                [0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,0,0,0,0]]) 
         self.path_surface = pygame.Surface((width/n,height/m))
         self.wall_surface = pygame.Surface((width/n,height/m))
         self.hole_surface = pygame.Surface((width/n,height/m))
