@@ -95,7 +95,11 @@ class Agent:
     
     def empowered(self, mapa):
         emps = self.empsForActions(mapa)
-        return np.argmax(emps)
+        print(emps)
+        indices = [index for index, item in enumerate(emps) if item == max(emps)]
+        i = np.random.randint(len(indices))
+        print(indices[i], "\n")
+        return indices[i] #wziac losowa wartosc z najwiekszych wartosci
     
 
 
@@ -141,7 +145,6 @@ while True:
     our_map.draw_map()
     agent.draw_agent()
     agent.do(agent.empowered(our_map.coords), our_map.coords)
-
 
 
     pygame.display.update() 
