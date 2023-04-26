@@ -7,8 +7,8 @@ import copy
 
 #Settings
 pygame.init()
-width = 600
-height = 600
+width = 800
+height = 700
 n = 10
 m = 10
 N = 100 #ilosc sekwencji
@@ -28,6 +28,8 @@ class Tiles(Enum):
     HOLE = -1
     BOX = 2
     GRASS = 3
+    SIANO = 4
+    SIANOHOLE = 5
 
 
 class Actions(Enum):
@@ -35,10 +37,10 @@ class Actions(Enum):
     DOWN = 1
     LEFT = 2
     RIGHT = 3
-    DO_UP = 4
-    DO_DOWN = 5
-    DO_LEFT = 6
-    DO_RIGHT = 7
+    # DO_UP = 4
+    # DO_DOWN = 5
+    # DO_LEFT = 6
+    # DO_RIGHT = 7
 
 class Agent(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -60,9 +62,23 @@ class Agent(pygame.sprite.Sprite):
         # self.surface = pygame.image.load('graphics/player.png').convert_alpha()
         # self.surface = pygame.transform.scale(self.surface, (width/n,height/m)) 
 
-    def draw_agent(self):
+    def draw_agent(self,mapa):
         screen.blit(self.surface, (self.x*width/n,self.y*height/m))
         self.animation_state()
+        
+        if(mapa[self.y][self.x]==Tiles.SIANO.value):
+            if(mapa[self.y+1][self.x]==Tiles.HOLE.value):
+                mapa[self.y+1][self.x]=Tiles.SIANOHOLE.value
+                mapa[self.y][self.x]=Tiles.PATH.value
+            elif(mapa[self.y-1][self.x]==Tiles.HOLE.value):
+                mapa[self.y-1][self.x]=Tiles.SIANOHOLE.value
+                mapa[self.y][self.x]=Tiles.PATH.value
+            elif(mapa[self.y][self.x+1]==Tiles.HOLE.value):
+                mapa[self.y][self.x+1]=Tiles.SIANOHOLE.value
+                mapa[self.y][self.x]=Tiles.PATH.value
+            elif(mapa[self.y][self.x-1]==Tiles.HOLE.value):
+                mapa[self.y][self.x-1]=Tiles.SIANOHOLE.value
+                mapa[self.y][self.x]=Tiles.PATH.value
 
     def do(self, action, mapa):
         if(action == Actions.UP.value and self.y > 0 and self.y < n and mapa[self.y-1][self.x] != Tiles.WALL.value and mapa[self.y-1][self.x] != Tiles.HOLE.value):
@@ -74,7 +90,19 @@ class Agent(pygame.sprite.Sprite):
         elif(action == Actions.RIGHT.value and self.x >= 0 and self.x < m-1 and mapa[self.y][self.x+1] != Tiles.WALL.value and mapa[self.y][self.x+1] != Tiles.HOLE.value):
             self.x += 1
 
-        # if(mapa[self.y])
+        # if(mapa[self.y][self.x]==Tiles.SIANO.value):
+        #     if(mapa[self.y+1][self.x]==Tiles.HOLE.value):
+        #         mapa[self.y+1][self.x]=Tiles.SIANOHOLE.value
+        #         mapa[self.y][self.x]=Tiles.PATH.value
+        #     elif(mapa[self.y-1][self.x]==Tiles.HOLE.value):
+        #         mapa[self.y-1][self.x]=Tiles.SIANOHOLE.value
+        #         mapa[self.y][self.x]=Tiles.PATH.value
+        #     elif(mapa[self.y][self.x+1]==Tiles.HOLE.value):
+        #         mapa[self.y][self.x+1]=Tiles.SIANOHOLE.value
+        #         mapa[self.y][self.x]=Tiles.PATH.value
+        #     elif(mapa[self.y][self.x-1]==Tiles.HOLE.value):
+        #         mapa[self.y][self.x-1]=Tiles.SIANOHOLE.value
+        #         mapa[self.y][self.x]=Tiles.PATH.value
         # elif(action == Actions.DO_UP.value):
         #     self.y -= 2
         # elif(action == Actions.DO_DOWN.value):
@@ -130,20 +158,25 @@ class Our_map:
                                 [0,1,3,3,0,0,0,0,0,0],
                                 [0,1,3,0,0,0,0,0,0,0],
                                 [0,1,3,0,0,0,0,0,0,0],
+                                [4,-1,3,0,0,0,0,0,0,0],
                                 [0,-1,3,0,0,0,0,0,0,0],
-                                [0,-1,3,0,0,0,0,0,0,0],
-                                [0,1,0,0,0,0,0,0,0,0],
+                                [0,1,0,0,0,0,4,-1,0,0],
                                 [0,0,0,0,0,0,0,0,0,0],
                                 [0,1,0,0,0,0,0,0,0,0],
                                 [0,1,0,0,0,0,0,0,0,0]]) 
-        self.path_surface = pygame.image.load('graphics/path.png').convert_alpha() #!
-        self.path_surface = pygame.transform.scale(self.path_surface, (width/n,height/m)) #!
-        self.grass_surface = pygame.image.load('graphics/grass.png').convert_alpha()  #!
-        self.grass_surface = pygame.transform.scale(self.grass_surface, (width/n,height/m)) #!
-        self.wall_surface = pygame.image.load('graphics/bigstone.png').convert_alpha()  #! convert()
-        self.wall_surface = pygame.transform.scale(self.wall_surface, (width/n,height/m)) #!
-        self.hole_surface = pygame.image.load('graphics/hole.png').convert()  #!
-        self.hole_surface = pygame.transform.scale(self.hole_surface, (width/n,height/m)) #!
+        self.path_surface = pygame.image.load('graphics/path.png').convert_alpha()
+        self.path_surface = pygame.transform.scale(self.path_surface, (width/n,height/m)) 
+        self.grass_surface = pygame.image.load('graphics/grass.png').convert_alpha() 
+        self.grass_surface = pygame.transform.scale(self.grass_surface, (width/n,height/m)) 
+        self.wall_surface = pygame.image.load('graphics/bigstone.png').convert_alpha()
+        self.wall_surface = pygame.transform.scale(self.wall_surface, (width/n,height/m)) 
+        self.hole_surface = pygame.image.load('graphics/hole.png').convert_alpha() 
+        self.hole_surface = pygame.transform.scale(self.hole_surface, (width/n,height/m))
+        self.siano_surface = pygame.image.load('graphics/siano.png').convert_alpha() 
+        self.siano_surface = pygame.transform.scale(self.siano_surface, (width/n,height/m))
+        self.holewith_surface = pygame.image.load('graphics/holewithsiano.png').convert_alpha() 
+        self.holewith_surface = pygame.transform.scale(self.holewith_surface, (width/n,height/m))
+        
 
 
         # self.path_surface = pygame.Surface((width/n,height/m))
@@ -166,6 +199,11 @@ class Our_map:
                     screen.blit(self.hole_surface, (j*width/n,i*height/m))
                 elif(self.coords[i,j] == Tiles.GRASS.value):
                     screen.blit(self.grass_surface, (j*width/n,i*height/m))
+                elif(self.coords[i,j] == Tiles.SIANO.value):
+                    screen.blit(self.siano_surface, (j*width/n,i*height/m))
+                elif(self.coords[i,j] == Tiles.SIANOHOLE.value):
+                    screen.blit(self.holewith_surface, (j*width/n,i*height/m))
+
 
 our_map = Our_map()
 agent = Agent(0,0)
@@ -176,11 +214,9 @@ while True:
             exit()
     screen.blit(background, (0, 0))
     our_map.draw_map()
-    agent.draw_agent()
+    agent.draw_agent(our_map.coords)
     agent.do(agent.empowered(our_map.coords), our_map.coords)
     
-
-
     pygame.display.update() 
     clock.tick(3)
 
