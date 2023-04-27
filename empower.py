@@ -6,6 +6,7 @@ from random import randint as rand
 import copy 
 
 #Settings
+#test
 pygame.init()
 width = 800
 height = 700
