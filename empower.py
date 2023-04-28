@@ -3,15 +3,14 @@ import numpy as np
 from sys import exit
 from enum import Enum
 from random import randint as rand
-import copy 
-
+import timeit
 #Settings
 pygame.init()
 width = 800
 height = 700
 n = 10
 m = 10
-N = 100 #ilosc sekwencji
+N = 1000 #ilosc sekwencji
 L = 25 #dlugosc
 M = 8 #ilosc ruchow
 screen = pygame.display.set_mode((width, height))
@@ -69,7 +68,6 @@ class Agent(pygame.sprite.Sprite):
         self.surface = self.player_walk[self.player_index]
         self.surface = pygame.transform.scale(self.surface, (width/n,height/m))
 
-
     def draw_agent(self, map):
         screen.blit(self.surface, (self.x*width/n,self.y*height/m))
         self.animation_state()
@@ -84,7 +82,7 @@ class Agent(pygame.sprite.Sprite):
         elif(action == Actions.RIGHT.value and (self.x >= 0 and self.x < m-1) and not ifBlock(map[self.y][self.x+1])):
             self.x += 1
 
-        elif(action == Actions.DO_UP.value and (self.y > 0 and self.y < n) and map[self.y-1][self.x] == Tiles.SIANO.value):
+        elif(action == Actions.DO_UP.value and (self.y > 0 and self.y < n)):
             if(self.maSianko):
                 if(map[self.y-1][self.x] == Tiles.PATH.value):
                     map[self.y-1][self.x] = Tiles.SIANO.value
@@ -148,40 +146,36 @@ class Agent(pygame.sprite.Sprite):
                     map[self.y][self.x+1] = Tiles.HOLE.value
                     self.maSianko = True
 
-
-    def quasiMove(self, initAction, sequence, map):
-        quasiMap = map.copy()
-        quasiAgent = Agent(self.getXY()[0], self.getXY()[1])
-        quasiAgent.do(initAction,quasiMap)
-        for action in sequence:
-            quasiAgent.do(action, quasiMap)
-        return quasiAgent.getXY()
-
     def getXY(self):
         return [self.x, self.y]
-    
+
+    def quasiMove(self, initAction, map, quasiAgent):
+        quasiAgent.x = self.x
+        quasiAgent.y = self.y
+        quasiAgent.maSianko = self.maSianko
+        quasiMap = map.copy()
+        # print(quasiMap)
+        quasiAgent.do(initAction,quasiMap)
+        for i in range(L):
+            quasiAgent.do(rand(0, M-1), quasiMap)
+        return quasiAgent.getXY()
+
+    def getEmps(self, initAction, map):
+        quasiAgent = Agent(self.x, self.y)
+        xys = [self.quasiMove(initAction, map, quasiAgent) for i in range(N)]
+
+        return len(np.unique(xys, axis=0))
+
     def empsForActions(self, map):
-        emps = []
-        for initAction in range(0,M):
-            seqs =[]
-            xys = []
-            for i in range(N):
-                sequence = []
-                for j in range(L):
-                    sequence.append(np.random.randint(0, M-1)) #losowanie ruchow po DANYM ruchu (w prawo)
-                seqs.append(sequence)
-            for i in range(N):
-                    xys.append(self.quasiMove(initAction, seqs[i], map))
-            emps.append(len(np.unique(xys, axis=0)))
-        return emps
+        return [self.getEmps(initAction, map) for initAction in range(0,M)]
     
     def empowered(self, map):
         emps = self.empsForActions(map)
         print(emps)
         indices = [index for index, item in enumerate(emps) if item == max(emps)]
-        i = np.random.randint(len(indices))
+        i = rand(0, len(indices)-1)
         print(indices[i], "\n")
-        return indices[i] #wziac losowa wartosc z najwiekszych wartosci
+        return indices[i]
     
     def animation_state(self):
         if(self.maSianko==True):
@@ -192,9 +186,6 @@ class Agent(pygame.sprite.Sprite):
             self.player_index += 1
             if self.player_index >= len(self.player_walk):self.player_index = 0
             self.surface = self.player_walk[int(self.player_index)]
-
-        # print(int(self.player_index))
-
 
 class OurMap:
     def __init__(self, coords):
@@ -211,18 +202,6 @@ class OurMap:
         self.siano_surface = pygame.transform.scale(self.siano_surface, (width/n,height/m))
         self.holewith_surface = pygame.image.load('graphics/holewithsiano.png').convert_alpha() 
         self.holewith_surface = pygame.transform.scale(self.holewith_surface, (width/n,height/m))
-        
-
-
-        # self.path_surface = pygame.Surface((width/n,height/m))
-        # self.wall_surface = pygame.Surface((width/n,height/m))
-        # self.hole_surface = pygame.Surface((width/n,height/m))
-        # self.path_surface.fill("Green")
-        # self.wall_surface.fill("Red")
-        # self.hole_surface.fill("Black")
-
-
-
 
     def drawMap(self):
         n,m = self.coords.shape
@@ -254,6 +233,7 @@ coords  = np.array([[0,1,3,3,0,0,0,0,0,0],
 
 ourMap = OurMap(coords)
 agent = Agent(0,3)
+# agent = Agent(6,3)
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -262,10 +242,15 @@ while True:
     screen.blit(background, (0, 0))
     ourMap.drawMap()
     agent.draw_agent(ourMap.coords)
+    start = timeit.default_timer()
+
     agent.do(agent.empowered(ourMap.coords), ourMap.coords)
-    # agent.do(4, ourMap.coords)
-    print()
-    
+
+    # agent.do(5, ourMap.coords)
+
+
+    print("The difference of time is :", timeit.default_timer() - start)
+        
     pygame.display.update() 
-    clock.tick(60)
+    clock.tick(10)
 
