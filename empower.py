@@ -11,7 +11,7 @@ width = 800
 height = 700
 n = 10
 m = 10
-N = 1000 #ilosc sekwencji
+N = 100 #ilosc sekwencji
 L = 25 #dlugosc
 M = 8 #ilosc ruchow
 screen = pygame.display.set_mode((width, height))
@@ -57,7 +57,14 @@ class Agent(pygame.sprite.Sprite):
         player_walk_1 = pygame.transform.scale(player_walk_1, (width/n,height/m))
         player_walk_2 = pygame.image.load('graphics/player/player_walk_2.png').convert_alpha()
         player_walk_2 = pygame.transform.scale(player_walk_2, (width/n,height/m))
+        #sianko 
+        player_walk_1_sianko = pygame.image.load('graphics/player/player_walk_1_sianko.png').convert_alpha()
+        player_walk_1_sianko = pygame.transform.scale(player_walk_1_sianko, (width/n,height/m))
+        player_walk_2_sianko = pygame.image.load('graphics/player/player_walk_2_sianko.png').convert_alpha()
+        player_walk_2_sianko = pygame.transform.scale(player_walk_2_sianko, (width/n,height/m))
+
         self.player_walk = [player_walk_1,player_walk_2]
+        self.player_walk_sianko = [player_walk_1_sianko,player_walk_2_sianko]
         self.player_index = 0
         self.surface = self.player_walk[self.player_index]
         self.surface = pygame.transform.scale(self.surface, (width/n,height/m))
@@ -177,9 +184,15 @@ class Agent(pygame.sprite.Sprite):
         return indices[i] #wziac losowa wartosc z najwiekszych wartosci
     
     def animation_state(self):
-        self.player_index += 1
-        if self.player_index >= len(self.player_walk):self.player_index = 0
-        self.surface = self.player_walk[int(self.player_index)]
+        if(self.maSianko==True):
+            self.player_index += 1
+            if self.player_index >= len(self.player_walk_sianko):self.player_index = 0
+            self.surface = self.player_walk_sianko[int(self.player_index)]
+        else:
+            self.player_index += 1
+            if self.player_index >= len(self.player_walk):self.player_index = 0
+            self.surface = self.player_walk[int(self.player_index)]
+
         # print(int(self.player_index))
 
 
