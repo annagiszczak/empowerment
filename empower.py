@@ -4,13 +4,14 @@ from sys import exit
 from enum import Enum
 from random import randint as rand
 import timeit
+from threading import Thread
 #Settings
 pygame.init()
 width = 800
 height = 700
 n = 10
 m = 10
-N = 1000 #ilosc sekwencji
+N = 10000 #ilosc sekwencji
 L = 25 #dlugosc
 M = 8 #ilosc ruchow
 screen = pygame.display.set_mode((width, height))
@@ -19,6 +20,13 @@ clock = pygame.time.Clock()
 background = pygame.Surface((width, height))
 background.fill((103, 169, 0))
 # test_font = pygame.font.Font('./font/Pixeltype.ttf', 50)
+
+class ThreadWithResult(Thread):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None):
+        def function():
+            self.result = target(*args, **kwargs)
+        super().__init__(group=group, target=function, name=name, daemon=daemon)
+
 
 class Tiles(Enum):
     PATH = 0
@@ -170,7 +178,16 @@ class Agent(pygame.sprite.Sprite):
         return [self.getEmps(initAction, map) for initAction in range(0,M)]
     
     def empowered(self, map):
-        emps = self.empsForActions(map)
+        t = [None]*M
+        for i in range(0, M):
+            t[i]  = ThreadWithResult(target=self.getEmps, args=(i, map))
+            t[i].start()
+
+        for i in range(0, M):
+            t[i].join()
+
+        emps = [t[i].result for i in range(0, M)]
+        # emps = self.empsForActions(map)
         print(emps)
         indices = [index for index, item in enumerate(emps) if item == max(emps)]
         i = rand(0, len(indices)-1)
